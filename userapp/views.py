@@ -14,8 +14,6 @@ import pytz
 utc=pytz.UTC
 # Create your views here.
 
-
-
 #Read and Create user
 @api_view(['POST','GET'])
 @csrf_exempt
@@ -63,36 +61,33 @@ def updateuser(request,id):
         user.delete()
         return Response({'status':200})
             
-        
-        
-    
-    
+            
 #token authentication
 @api_view(['POST'])
 @csrf_exempt
 def login(request):
-    #try:
-    requestdata = json.loads(request.body)
-    username = requestdata['username']
-    #email = requestdata.get('email')
-    password = requestdata['password']
-    user = authenticate(request,username=username, password = password)     #User.objects.get(username=username,password=password) 
-    print(user,username,password)
-    if user is not None:
-        print("login")
-        auth.login(request,user)
-        print('login sucssfully')
+    try:
+        requestdata = json.loads(request.body)
+        username = requestdata['username']
+        #email = requestdata.get('email')
+        password = requestdata['password']
+        user = authenticate(request,username=username, password = password)     #User.objects.get(username=username,password=password) 
         print(user,username,password)
-        token,created=Token.objects.get_or_create(user=user)
-        # token = Token.objects.filter(user_id=request.user)          #get_or_create(user = user)
-        # if token is None:
-        #     token=Token.objects.create(user=user)
-        print(username,password,token.key)
-        return Response({"status":200,"token":token.key, "username":username, "password":password})
-    else:
-        return Response({"status":400,"data":"invalid user"})
-    # except Exception as e:
-    #     return Response(str(e))
+        if user is not None:
+            print("login")
+            auth.login(request,user)
+            print('login sucssfully')
+            print(user,username,password)
+            token,created=Token.objects.get_or_create(user=user)
+            # token = Token.objects.filter(user_id=request.user)          #get_or_create(user = user)
+            # if token is None:
+            #     token=Token.objects.create(user=user)
+            print(username,password,token.key)
+            return Response({"status":200,"token":token.key, "username":username, "password":password})
+        else:
+            return Response({"status":400,"data":"invalid user"})
+    except Exception as e:
+        return Response(str(e))
 
 #logout
 @api_view(['GET'])
@@ -118,24 +113,24 @@ def auctionlist(request):
 @api_view(['POST'])
 @csrf_exempt
 def createbid(request):
-    #try:
-    if request.method == 'POST':
-        requestdata = json.loads(request.body)
-        currenttime = datetime.now().replace(tzinfo=utc)
-        auction=requestdata['auction']
-        auctionobj=Auction.objects.get(item_name=auction)
-        user=User.objects.get(username=request.user)            #basic auth
-        endtime = auctionobj.end_time.replace(tzinfo=utc)
-        print(auctionobj,user,auctionobj.end_time,endtime,currenttime)
-        if endtime > currenttime:
-            biddata = Bidd.objects.create(user=user,auction=auctionobj,amount=requestdata['amount'])
-            auctionobj.bidd_count=auctionobj.bidd_count+1
-            auctionobj.save()
-            return Response({'status':201,'data':"bid created successfully"})
-        else:
-            return Response({'data':"Auction is closed"})
-    # except Exception as e:
-    #     return Response(str(e))
+    try:
+        if request.method == 'POST':
+            requestdata = json.loads(request.body)
+            currenttime = datetime.now().replace(tzinfo=utc)
+            auction=requestdata['auction']
+            auctionobj=Auction.objects.get(item_name=auction)
+            user=User.objects.get(username=request.user)            #basic auth
+            endtime = auctionobj.end_time.replace(tzinfo=utc)
+            print(auctionobj,user,auctionobj.end_time,endtime,currenttime)
+            if endtime > currenttime:
+                biddata = Bidd.objects.create(user=user,auction=auctionobj,amount=requestdata['amount'])
+                auctionobj.bidd_count=auctionobj.bidd_count+1
+                auctionobj.save()
+                return Response({'status':201,'data':"bid created successfully"})
+            else:
+                return Response({'data':"Auction is closed"})
+    except Exception as e:
+        return Response(str(e))
             
     
 @api_view(['GET'])
